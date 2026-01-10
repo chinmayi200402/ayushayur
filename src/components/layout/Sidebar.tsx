@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Leaf,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const navItems = [
   { icon: Route, label: "Treatment Journey", path: "/treatment-journey" },
   { icon: Package, label: "Inventory", path: "/inventory" },
   { icon: BarChart3, label: "Reports", path: "/reports" },
+  { icon: FileText, label: "Discharge Summary", path: "/discharge-summary" },
 ];
 
 export function Sidebar() {

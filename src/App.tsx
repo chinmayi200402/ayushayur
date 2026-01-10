@@ -11,6 +11,7 @@ import DailySchedule from "./pages/DailySchedule";
 import TreatmentJourney from "./pages/TreatmentJourney";
 import Inventory from "./pages/Inventory";
 import Reports from "./pages/Reports";
+import DischargeSummary from "./pages/DischargeSummary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/treatment-journey" element={<TreatmentJourney />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/discharge-summary" element={<DischargeSummary />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
