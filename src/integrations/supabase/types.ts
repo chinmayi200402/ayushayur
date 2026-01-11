@@ -14,7 +14,372 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          notes: string | null
+          patient_id: string
+          room_id: string
+          start_time: string
+          status: string
+          therapist_id: string
+          therapy_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          room_id: string
+          start_time: string
+          status?: string
+          therapist_id: string
+          therapy_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          room_id?: string
+          start_time?: string
+          status?: string
+          therapist_id?: string
+          therapy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_therapy_id_fkey"
+            columns: ["therapy_id"]
+            isOneToOne: false
+            referencedRelation: "therapies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory: {
+        Row: {
+          category: string
+          cost_per_unit: number | null
+          created_at: string
+          id: string
+          item_name: string
+          last_restocked_at: string | null
+          min_stock_level: number
+          quantity: number
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          cost_per_unit?: number | null
+          created_at?: string
+          id?: string
+          item_name: string
+          last_restocked_at?: string | null
+          min_stock_level?: number
+          quantity?: number
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_per_unit?: number | null
+          created_at?: string
+          id?: string
+          item_name?: string
+          last_restocked_at?: string | null
+          min_stock_level?: number
+          quantity?: number
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          address: string | null
+          age: number
+          blood_group: string | null
+          contact: string
+          created_at: string
+          gender: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          age: number
+          blood_group?: string | null
+          contact: string
+          created_at?: string
+          gender: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          age?: number
+          blood_group?: string | null
+          contact?: string
+          created_at?: string
+          gender?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prakriti_assessments: {
+        Row: {
+          assessment_date: string
+          id: string
+          kapha_score: number
+          patient_id: string
+          pitta_score: number
+          responses: Json | null
+          vata_score: number
+        }
+        Insert: {
+          assessment_date?: string
+          id?: string
+          kapha_score?: number
+          patient_id: string
+          pitta_score?: number
+          responses?: Json | null
+          vata_score?: number
+        }
+        Update: {
+          assessment_date?: string
+          id?: string
+          kapha_score?: number
+          patient_id?: string
+          pitta_score?: number
+          responses?: Json | null
+          vata_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prakriti_assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          id: string
+          room_number: string
+          status: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          room_number: string
+          status?: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          room_number?: string
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      therapies: {
+        Row: {
+          base_cost: number
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          gender_restriction: boolean
+          id: string
+          name: string
+        }
+        Insert: {
+          base_cost?: number
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          gender_restriction?: boolean
+          id?: string
+          name: string
+        }
+        Update: {
+          base_cost?: number
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          gender_restriction?: boolean
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      therapists: {
+        Row: {
+          contact: string | null
+          created_at: string
+          gender: string
+          id: string
+          is_active: boolean
+          name: string
+          specialization: string | null
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          gender: string
+          id?: string
+          is_active?: boolean
+          name: string
+          specialization?: string | null
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          gender?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          specialization?: string | null
+        }
+        Relationships: []
+      }
+      treatment_journey: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          day_number: number
+          id: string
+          notes: string | null
+          patient_id: string
+          prescribed_diet: string | null
+          session_completed: boolean
+          therapy_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          day_number: number
+          id?: string
+          notes?: string | null
+          patient_id: string
+          prescribed_diet?: string | null
+          session_completed?: boolean
+          therapy_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          day_number?: number
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          prescribed_diet?: string | null
+          session_completed?: boolean
+          therapy_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_journey_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_journey_therapy_id_fkey"
+            columns: ["therapy_id"]
+            isOneToOne: false
+            referencedRelation: "therapies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vitals: {
+        Row: {
+          appetite: string | null
+          bp_diastolic: number | null
+          bp_systolic: number | null
+          day_number: number
+          id: string
+          notes: string | null
+          patient_id: string
+          pulse: number | null
+          recorded_at: string
+        }
+        Insert: {
+          appetite?: string | null
+          bp_diastolic?: number | null
+          bp_systolic?: number | null
+          day_number: number
+          id?: string
+          notes?: string | null
+          patient_id: string
+          pulse?: number | null
+          recorded_at?: string
+        }
+        Update: {
+          appetite?: string | null
+          bp_diastolic?: number | null
+          bp_systolic?: number | null
+          day_number?: number
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          pulse?: number | null
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vitals_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
