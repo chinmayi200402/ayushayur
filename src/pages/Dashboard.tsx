@@ -1,51 +1,96 @@
 import { motion } from "framer-motion";
-import { Users, Calendar, Activity, Package, TrendingUp, Heart } from "lucide-react";
+import { Users, Calendar, Heart, Package, Plus, Clock, Activity } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { StatCard } from "@/components/ui/stat-card";
 import { RecentPatients } from "@/components/dashboard/RecentPatients";
 import { TodaySchedule } from "@/components/dashboard/TodaySchedule";
 import { InventoryAlert } from "@/components/dashboard/InventoryAlert";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
+  const { data: stats } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: async () => {
+      const [patients, appointments, inventory] = await Promise.all([
+        supabase.from("patients").select("id", { count: "exact" }),
+        supabase.from("appointments").select("id, status").eq("date", new Date().toISOString().split("T")[0]),
+        supabase.from("inventory").select("id, quantity, min_stock_level"),
+      ]);
+
+      const lowStockCount = (inventory.data || []).filter(
+        item => item.quantity < item.min_stock_level
+      ).length;
+
+      const completedToday = (appointments.data || []).filter(
+        a => a.status === "Completed"
+      ).length;
+
+      return {
+        totalPatients: patients.count || 0,
+        todayAppointments: appointments.data?.length || 0,
+        completedToday,
+        inventoryItems: inventory.data?.length || 0,
+        lowStockAlerts: lowStockCount,
+      };
+    },
+  });
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case "new-patient":
+        navigate("/patients");
+        break;
+      case "schedule-therapy":
+        navigate("/scheduler");
+        break;
+      case "prakriti-assessment":
+        navigate("/prakriti");
+        break;
+    }
+  };
+
   return (
     <MainLayout>
-      <div className="space-y-8">
+      <div className="space-y-6 md:space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col gap-2"
         >
-          <h1 className="font-display text-3xl font-semibold text-foreground">
+          <h1 className="font-display text-2xl md:text-3xl font-semibold text-foreground">
             Welcome back, <span className="text-gradient">Dr. Admin</span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             Here's what's happening at your Ayurvedic center today
           </p>
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           <StatCard
             title="Total Patients"
-            value={124}
-            subtitle="12 new this week"
+            value={stats?.totalPatients || 0}
+            subtitle="Active patients"
             icon={Users}
-            trend={{ value: 8, positive: true }}
             variant="primary"
             delay={0.1}
           />
           <StatCard
             title="Today's Appointments"
-            value={18}
-            subtitle="4 completed"
+            value={stats?.todayAppointments || 0}
+            subtitle={`${stats?.completedToday || 0} completed`}
             icon={Calendar}
             variant="accent"
             delay={0.15}
           />
           <StatCard
             title="Active Treatments"
-            value={32}
+            value={stats?.todayAppointments || 0}
             subtitle="Panchakarma in progress"
             icon={Heart}
             variant="highlight"
@@ -53,15 +98,15 @@ export default function Dashboard() {
           />
           <StatCard
             title="Inventory Items"
-            value={156}
-            subtitle="3 low stock alerts"
+            value={stats?.inventoryItems || 0}
+            subtitle={`${stats?.lowStockAlerts || 0} low stock alerts`}
             icon={Package}
             delay={0.25}
           />
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Recent Patients */}
           <div className="lg:col-span-1">
             <RecentPatients />
@@ -83,30 +128,39 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-gradient-to-r from-primary/10 via-accent/10 to-highlight/10 rounded-2xl p-6 border border-primary/20"
+          className="bg-gradient-to-r from-primary/10 via-accent/10 to-highlight/10 rounded-2xl p-4 md:p-6 border border-primary/20"
         >
-          <h3 className="font-display text-lg font-semibold mb-4">Quick Actions</h3>
-          <div className="flex flex-wrap gap-3">
+          <h3 className="font-display text-base md:text-lg font-semibold mb-4">Quick Actions</h3>
+          <div className="flex flex-wrap gap-2 md:gap-3">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm hover:bg-primary/90 transition-colors"
+              onClick={() => handleQuickAction("new-patient")}
+              className="flex items-center gap-2 px-4 md:px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm hover:bg-primary/90 transition-colors"
             >
-              + New Patient
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Patient</span>
+              <span className="sm:hidden">Patient</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-5 py-2.5 bg-accent text-accent-foreground rounded-xl font-medium text-sm hover:bg-accent/90 transition-colors"
+              onClick={() => handleQuickAction("schedule-therapy")}
+              className="flex items-center gap-2 px-4 md:px-5 py-2.5 bg-accent text-accent-foreground rounded-xl font-medium text-sm hover:bg-accent/90 transition-colors"
             >
-              Schedule Therapy
+              <Clock className="w-4 h-4" />
+              <span className="hidden sm:inline">Schedule Therapy</span>
+              <span className="sm:hidden">Schedule</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-5 py-2.5 bg-highlight text-highlight-foreground rounded-xl font-medium text-sm hover:bg-highlight/90 transition-colors"
+              onClick={() => handleQuickAction("prakriti-assessment")}
+              className="flex items-center gap-2 px-4 md:px-5 py-2.5 bg-highlight text-highlight-foreground rounded-xl font-medium text-sm hover:bg-highlight/90 transition-colors"
             >
-              Prakriti Assessment
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Prakriti Assessment</span>
+              <span className="sm:hidden">Prakriti</span>
             </motion.button>
           </div>
         </motion.div>
