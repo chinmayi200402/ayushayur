@@ -1,11 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Activity, Check, RotateCcw } from "lucide-react";
+import { ChevronRight, ChevronLeft, Activity, Check, RotateCcw, User, Save } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PrakritiChart } from "@/components/prakriti/PrakritiChart";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Option {
   id: string;
@@ -239,15 +242,22 @@ const categories: Category[] = [
   },
 ];
 
-// Count total options per dosha
 const VATA_TOTAL = 32;
 const PITTA_TOTAL = 32;
 const KAPHA_TOTAL = 32;
 
 export default function Prakriti() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  const patientId = searchParams.get("patientId");
+  const patientName = searchParams.get("patientName");
+
   const [currentCategory, setCurrentCategory] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
   const [showResults, setShowResults] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const progress = ((currentCategory + 1) / categories.length) * 100;
 
@@ -310,6 +320,7 @@ export default function Prakriti() {
     setCurrentCategory(0);
     setSelectedOptions(new Set());
     setShowResults(false);
+    setIsSaved(false);
   };
 
   const getPrakritiResult = () => {
@@ -336,6 +347,45 @@ export default function Prakriti() {
     };
   };
 
+  const handleSaveToPatient = async () => {
+    if (!patientId) {
+      toast.error("No patient selected. Please select a patient first.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Create responses object for storage
+      const responses: Record<string, string[]> = {};
+      categories.forEach(cat => {
+        const selected = cat.options.filter(opt => selectedOptions.has(opt.id)).map(opt => opt.id);
+        if (selected.length > 0) {
+          responses[cat.name] = selected;
+        }
+      });
+
+      const { error } = await supabase
+        .from("prakriti_assessments")
+        .insert({
+          patient_id: patientId,
+          vata_score: scores.vataCount,
+          pitta_score: scores.pittaCount,
+          kapha_score: scores.kaphaCount,
+          responses: responses,
+        });
+
+      if (error) throw error;
+
+      setIsSaved(true);
+      toast.success("Prakriti assessment saved to patient profile!");
+    } catch (error) {
+      console.error("Error saving assessment:", error);
+      toast.error("Failed to save assessment");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const currentCategoryData = categories[currentCategory];
   const categorySelections = currentCategoryData.options.filter(opt => 
     selectedOptions.has(opt.id)
@@ -356,6 +406,21 @@ export default function Prakriti() {
           <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Clinical Constitution Analysis based on Vimana Sthana
           </p>
+          
+          {/* Patient Info Banner */}
+          {patientName && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-xl"
+            >
+              <User className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">
+                Patient: <span className="text-primary">{decodeURIComponent(patientName)}</span>
+              </span>
+            </motion.div>
+          )}
         </motion.div>
 
         {!showResults ? (
@@ -493,6 +558,11 @@ export default function Prakriti() {
               <h2 className="font-display text-xl md:text-2xl font-semibold mb-2">
                 Assessment Complete
               </h2>
+              {patientName && (
+                <p className="text-muted-foreground mb-2">
+                  for <span className="font-medium text-foreground">{decodeURIComponent(patientName)}</span>
+                </p>
+              )}
               <p className="text-lg font-semibold text-primary mb-1">
                 {getPrakritiResult().type}
               </p>
@@ -540,9 +610,36 @@ export default function Prakriti() {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 New Assessment
               </Button>
-              <Button className="rounded-xl bg-primary text-primary-foreground">
-                Save to Patient Profile
-              </Button>
+              
+              {patientId ? (
+                <Button
+                  onClick={handleSaveToPatient}
+                  disabled={isSaving || isSaved}
+                  className="rounded-xl bg-primary text-primary-foreground"
+                >
+                  {isSaved ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Saved to Profile
+                    </>
+                  ) : isSaving ? (
+                    "Saving..."
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save to Patient Profile
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => navigate("/patients")}
+                  className="rounded-xl bg-primary text-primary-foreground"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Go to Patients
+                </Button>
+              )}
             </div>
           </motion.div>
         )}
